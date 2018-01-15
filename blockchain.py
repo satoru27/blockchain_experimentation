@@ -14,6 +14,8 @@ class Blockchain:
         self.chain = []
         self.nodes = set()
 
+        self.total_time_value = 0
+
         # Create the genesis block
         self.new_block(previous_hash='1', proof=100)
 
@@ -171,7 +173,7 @@ class Blockchain:
 
         guess = f'{last_proof}{proof}'.encode()
         guess_hash = hashlib.sha256(guess).hexdigest()
-        return guess_hash[:4] == "1234"
+        return guess_hash[:5] == "00000"
 
 
 # Instantiate the Node
@@ -189,7 +191,11 @@ def mine():
     # We run the proof of work algorithm to get the next proof...
     last_block = blockchain.last_block
     last_proof = last_block['proof']
+    start_time = time()
     proof = blockchain.proof_of_work(last_proof)
+
+    elapsed_time = time() - start_time
+    print(f"[Time elapsed finding the proof of work: {elapsed_time}]")
 
     # We must receive a reward for finding the proof.
     # The sender is "0" to signify that this node has mined a new coin.
@@ -210,6 +216,11 @@ def mine():
         'proof': block['proof'],
         'previous_hash': block['previous_hash'],
     }
+
+    blockchain.total_time_value += elapsed_time
+    mean_value = blockchain.total_time_value/(len(blockchain.chain) - 1)
+    print(f"[Mean time value: {mean_value}]")
+
     return jsonify(response), 200
 
 
@@ -272,7 +283,6 @@ def consensus():
         }
 
     return jsonify(response), 200
-
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
